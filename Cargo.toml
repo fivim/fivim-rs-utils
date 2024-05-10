@@ -3,10 +3,10 @@ name = "enassi-rs-utils"
 description = "Rust utils for enassi."
 version = "1.0.0"
 authors = ["newproplus <https://github.com/newproplus>"]
-edition = "2021"
-license = "ENSSI License Version 3"
 homepage = "https://github.com/enassi/enassi-rs-utils"
 repository = "https://github.com/enassi/enassi-rs-utils"
+edition = "2021"
+license-file = "LICENSE"
 readme = "README.md"
 
 [dependencies]

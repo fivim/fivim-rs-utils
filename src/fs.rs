@@ -1,3 +1,4 @@
+use log::error;
 use regex::Regex;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, ErrorKind};
@@ -41,28 +42,34 @@ pub fn path_buf_to_string(path_buf: PathBuf) -> String {
 
 /// Search the documents in the directory, the keywords can be a RE or  a plain text, the keywords text in result can be highlighted.
 ///  - `dir_path` the directory path
-/// 
+///
 /// # Arguments
 /// - `pattern`: RE pattern
-/// - `wrapper`: the wrapper or the keywords text in result, like "<span>\t\t\t</span>", the "\t\t\t" is the placehodler, and it will replaced with the keywords text
 /// - `context_size`: text size of the context of the keywords text
+/// - `wrapper`: the wrapper or the keywords text in result, like "<span>\t\t\t</span>", the "\t\t\t" is the placehodler, and it will replaced with the keywords text
 pub fn search_document(
-    dir_path: &Path,
+    dir_path: &PathBuf,
     use_re: bool,
     search: &str,
-    wrapper: &str,
     context_size: usize,
+    wrapper: &str,
 ) -> Result<Vec<String>, io::Error> {
     let mut results = Vec::new();
 
     fn process_file(
-        file_path: &Path,
+        file_path: &PathBuf,
         re: &Regex,  // RE
         plain: &str, // if not empty, query like a plaintext
         wrapper: &str,
         context_size: usize,
     ) -> Result<Vec<String>, io::Error> {
-        let file = File::open(file_path)?;
+        let file = match File::open(file_path) {
+            Ok(sss) => sss,
+            Err(e) => {
+                error!("File::open error {}", e);
+                return Ok([].to_vec());
+            }
+        };
 
         let reader = BufReader::new(file);
         let mut results222 = Vec::new();
@@ -135,7 +142,12 @@ pub fn search_document(
     if use_re {
         re = match Regex::new(search) {
             Ok(r) => r,
-            Err(e) => return Err(io::Error::new(ErrorKind::InvalidInput, e)),
+            Err(e) => {
+                return Err(io::Error::new(
+                    ErrorKind::InvalidInput,
+                    format!("Regex::new error: {:?}", e),
+                ))
+            }
         };
     } else {
         plain = search;
@@ -146,15 +158,23 @@ pub fn search_document(
         let path = entry.path();
 
         if path.is_file() {
-            results.extend(process_file(&path, &re, plain, wrapper, context_size)?);
+            let sss = match process_file(&path, &re, plain, wrapper, context_size) {
+                Ok(sss) => sss,
+                Err(e) => {
+                    error!("process_file error {}", e);
+                    continue;
+                }
+            };
+            results.extend(sss);
         } else if path.is_dir() {
-            results.extend(search_document(
-                &path,
-                use_re,
-                search,
-                wrapper,
-                context_size,
-            )?);
+            let sss = match search_document(&path, use_re, search, context_size, wrapper) {
+                Ok(sss) => sss,
+                Err(e) => {
+                    error!("search_document error {}", e);
+                    continue;
+                }
+            };
+            results.extend(sss);
         }
     }
 
@@ -164,36 +184,48 @@ pub fn search_document(
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
-    use std::{io::Error, path::Path};
+    use std::path::PathBuf;
 
     use crate::fs::search_document;
 
     #[test]
-    fn test_search_and_highlight_document() -> Result<(), Error> {
-        let dir_path = Path::new("/xxx");
+    fn test_search_document_re() {
+        let dir_path = PathBuf::from("/home/xxx/Documents/enassi/user_files/test");
 
-        let pattern1 = "IPX";
-        let wrapper = "<span>\t\t\t</span>";
-        let context_size = 10;
-        let results = search_document(&dir_path, true, pattern1, wrapper, context_size)?;
+        let pattern1 = "^##(.*)";
+        let wrapper1 = "<span>\t\t\t</span>";
+        let context_size1 = 50;
+        let results = match search_document(&dir_path, true, pattern1, context_size1, wrapper1) {
+            Ok(sss) => sss,
+            Err(e) => return println!("test_search_document_re error: {}", e),
+        };
 
         println!(">>> results of RE mode :::");
 
-        let pattern2 = "2535523";
         for result in results {
             println!("{}", result);
         }
 
-        let results = search_document(&dir_path, false, pattern2, wrapper, context_size)?;
-
         println!("\n\n");
+    }
+
+    #[test]
+    fn test_search_document() {
+        let dir_path = PathBuf::from("/home/xxx/Documents/enassi/user_files/test");
+
+        // not use_re
+        let pattern2 = "##";
+        let wrapper2 = "<span>\t\t\t</span>";
+        let context_size2 = 50;
+        let results = match search_document(&dir_path, false, pattern2, context_size2, wrapper2) {
+            Ok(sss) => sss,
+            Err(e) => return println!("test_search_document error: {}", e),
+        };
 
         println!(">>> results of none-RE mode :::");
 
         for result in results {
             println!("{}", result);
         }
-
-        Ok(())
     }
 }

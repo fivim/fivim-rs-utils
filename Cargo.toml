@@ -1,10 +1,10 @@
 [package]
-name = "enassi-rs-utils"
-description = "Rust utils for enassi."
+name = "fivim-rs-utils"
+description = "Rust utils for fivim."
 version = "1.0.1"
 authors = ["newproplus <https://github.com/newproplus>"]
-homepage = "https://github.com/enassi/enassi-rs-utils"
-repository = "https://github.com/enassi/enassi-rs-utils"
+homepage = "https://github.com/fivim/fivim-rs-utils"
+repository = "https://github.com/fivim/fivim-rs-utils"
 edition = "2021"
 license-file = "LICENSE"
 readme = "README.md"

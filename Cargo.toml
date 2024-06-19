@@ -1,7 +1,7 @@
 [package]
 name = "fivim-rs-utils"
 description = "Rust utils for fivim."
-version = "1.0.1"
+version = "1.0.2"
 authors = ["newproplus <https://github.com/newproplus>"]
 homepage = "https://github.com/fivim/fivim-rs-utils"
 repository = "https://github.com/fivim/fivim-rs-utils"

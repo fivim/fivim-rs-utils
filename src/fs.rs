@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_search_document_re() {
-        let dir_path = PathBuf::from("/home/xxx/Documents/enassi/user_files/test");
+        let dir_path = PathBuf::from("/home/xxx/Documents/fivim/user_files/test");
 
         let pattern1 = "^##(.*)";
         let wrapper1 = "<span>\t\t\t</span>";
@@ -211,7 +211,7 @@ mod tests {
 
     #[test]
     fn test_search_document() {
-        let dir_path = PathBuf::from("/home/xxx/Documents/enassi/user_files/test");
+        let dir_path = PathBuf::from("/home/xxx/Documents/fivim/user_files/test");
 
         // not use_re
         let pattern2 = "##";

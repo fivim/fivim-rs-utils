@@ -259,7 +259,7 @@ pub fn tree_info(path: &Path, dir_prefix: &str) -> Result<FileNode, Box<dyn Erro
 
 #[test]
 fn test_tree_info() {
-    let root_path = Path::new("/xxx/enassi");
+    let root_path = Path::new("/xxx/fivim");
     let tree = tree_info(&root_path, "\r\r\r").unwrap();
     // println!("{:?}", tree);
 

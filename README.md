@@ -1,3 +1,3 @@
-# enassi-rs-utils
+# fivim-rs-utils
 
-Rust utils for enassi.
+Rust utils for fivim.

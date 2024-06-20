@@ -11,6 +11,7 @@ pub mod hash;
 pub mod json_toml;
 pub mod logger;
 pub mod progress;
+pub mod search;
 pub mod sys;
 pub mod web;
 pub mod zip;

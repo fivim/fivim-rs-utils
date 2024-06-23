@@ -26,7 +26,7 @@ pub type SearchCallback = dyn Fn(PathBuf, String) -> String;
 const EXT_HTML: &str = "html";
 const EXT_XRTM: &str = "xrtm";
 
-fn callback_search_file(file_path: PathBuf, ext: String) -> String {
+fn prepare_html_like_file(file_path: PathBuf, ext: String) -> String {
     let mut string = String::new();
 
     let file = match File::open(&file_path) {
@@ -264,7 +264,7 @@ fn test_find_matches_plain() {
     println!("\n\n");
 }
 
-fn search_in_file(
+fn search_file_content(
     file_path: &PathBuf,
     plain: &str,
     re: &Option<Regex>,
@@ -272,8 +272,7 @@ fn search_in_file(
     context_size: usize,
     wrapper_prefix: &str,
     wrapper_postfix: &str,
-    callback_exts: &Vec<String>,
-    callback: &SearchCallback,
+    html_like_exts: &Vec<String>,
 ) -> Result<Vec<String>, io::Error> {
     let mut string = String::new();
 
@@ -282,8 +281,8 @@ fn search_in_file(
         None => "".to_string(),
     };
 
-    if ext.len() > 0 && callback_exts.contains(&ext) {
-        string = callback(file_path.to_path_buf(), ext)
+    if ext.len() > 0 && html_like_exts.contains(&ext) {
+        string = prepare_html_like_file(file_path.to_path_buf(), ext)
     } else {
         let file = match File::open(file_path) {
             Ok(sss) => sss,
@@ -313,7 +312,7 @@ fn search_in_file(
     }
 }
 
-pub fn search_document_dir(
+pub fn search_in_dir(
     dir_path: &PathBuf,
     search: &str,
     is_re_mode: bool,
@@ -321,7 +320,6 @@ pub fn search_document_dir(
     wrapper_prefix: &str,
     wrapper_postfix: &str,
     callback_exts: &Vec<String>,
-    callback: &SearchCallback,
 ) -> Result<Vec<SearchFileRes>, io::Error> {
     let mut results: Vec<SearchFileRes> = Vec::new();
     let plain = if is_re_mode { "" } else { search };
@@ -345,7 +343,7 @@ pub fn search_document_dir(
         let path = entry.path();
 
         if path.is_file() {
-            let sss = match search_in_file(
+            let sss = match search_file_content(
                 &path,
                 plain,
                 &re,
@@ -354,7 +352,6 @@ pub fn search_document_dir(
                 &wrapper_prefix,
                 &wrapper_postfix,
                 &callback_exts,
-                callback,
             ) {
                 Ok(sss) => sss,
                 Err(e) => {
@@ -371,7 +368,7 @@ pub fn search_document_dir(
                 results.push(search_file_res);
             }
         } else if path.is_dir() {
-            let sss = match search_document_dir(
+            let sss = match search_in_dir(
                 &path,
                 search,
                 is_re_mode,
@@ -379,7 +376,6 @@ pub fn search_document_dir(
                 wrapper_prefix,
                 wrapper_postfix,
                 &callback_exts,
-                callback,
             ) {
                 Ok(sss) => sss,
                 Err(e) => {
@@ -407,11 +403,7 @@ fn test_search_document_dir_re() {
     let wrapper_postfix = "</b>";
     let callback_exts = [].to_vec();
 
-    fn callback(file_path: PathBuf, ext: String) -> String {
-        "".to_owned()
-    }
-
-    let results = match search_document_dir(
+    let results = match search_in_dir(
         &dir_path,
         search,
         is_re_mode,
@@ -419,7 +411,6 @@ fn test_search_document_dir_re() {
         wrapper_prefix,
         wrapper_postfix,
         &callback_exts,
-        &callback,
     ) {
         Ok(sss) => sss,
         Err(e) => return println!("test_search_document_re error: {}", e),
@@ -438,15 +429,14 @@ fn test_search_document_dir_re() {
     println!("\n\n");
 }
 
-pub fn search_document_file(
+pub fn search_in_file(
     file_path: &PathBuf,
     search: &str,
     is_re_mode: bool,
     context_size: usize,
     wrapper_prefix: &str,
     wrapper_postfix: &str,
-    callback_exts: &Vec<String>,
-    callback: &SearchCallback,
+    html_like_exts: &Vec<String>,
 ) -> Result<Vec<SearchFileRes>, io::Error> {
     let mut results: Vec<SearchFileRes> = Vec::new();
     let plain = if is_re_mode { "" } else { search };
@@ -465,7 +455,7 @@ pub fn search_document_file(
         None
     };
 
-    let sss = match search_in_file(
+    let sss = match search_file_content(
         &file_path,
         plain,
         &re,
@@ -473,8 +463,7 @@ pub fn search_document_file(
         context_size,
         &wrapper_prefix,
         &wrapper_postfix,
-        &callback_exts,
-        callback,
+        &html_like_exts,
     ) {
         Ok(sss) => sss,
         Err(e) => {
@@ -561,143 +550,4 @@ fn test_process_html() {
     );
 
     print!("res: {}", res)
-}
-
-pub fn search_document_dir_wrapper(
-    dir_path: &PathBuf,
-    search: &str,
-    is_re_mode: bool,
-    context_size: usize,
-    wrapper_prefix: &str,
-    wrapper_postfix: &str,
-) -> Result<Vec<SearchFileRes>, io::Error> {
-    let callback_ext = [EXT_HTML.to_string(), EXT_XRTM.to_string()].to_vec();
-    let res = search_document_dir(
-        dir_path,
-        search,
-        is_re_mode,
-        context_size,
-        wrapper_prefix,
-        wrapper_postfix,
-        &callback_ext,
-        &callback_search_file,
-    );
-    res
-}
-
-#[test]
-fn test_search_document_dir_wrapper() {
-    let dir_path = PathBuf::from("/home/xxx/Documents/fivim/user_files");
-
-    let search = "123456";
-    let is_re_mode = false;
-    let context_size = 50;
-    let wrapper_prefix = "<b>";
-    let wrapper_postfix = "</b>";
-
-    let results = match search_document_dir_wrapper(
-        &dir_path,
-        search,
-        is_re_mode,
-        context_size,
-        wrapper_prefix,
-        wrapper_postfix,
-    ) {
-        Ok(sss) => sss,
-        Err(e) => return println!("test_search_document_wrapper error: {}", e),
-    };
-
-    println!(">>> results of NONE-RE mode :::");
-
-    for result in results {
-        println!("path: {}, matches: {:?}", result.path, result.matches);
-    }
-
-    println!("\n\n");
-}
-
-#[test]
-fn test_search_document_dir_wrapper_re() {
-    let dir_path = PathBuf::from("/home/xxx/Documents/fivim/user_files");
-
-    let search = "12345()";
-    let is_re_mode = true;
-    let context_size = 50;
-    let wrapper_prefix = "<b>";
-    let wrapper_postfix = "</b>";
-
-    let results = match search_document_dir_wrapper(
-        &dir_path,
-        search,
-        is_re_mode,
-        context_size,
-        wrapper_prefix,
-        wrapper_postfix,
-    ) {
-        Ok(sss) => sss,
-        Err(e) => return println!("test_search_document_dir_wrapper_re error: {}", e),
-    };
-
-    println!(">>> results of RE mode :::");
-
-    for result in results {
-        println!("path: {}, matches: {:?}", result.path, result.matches);
-    }
-
-    println!("\n\n");
-}
-
-pub fn search_document_file_wrapper(
-    file_path: &PathBuf,
-    search: &str,
-    is_re_mode: bool,
-    context_size: usize,
-    wrapper_prefix: &str,
-    wrapper_postfix: &str,
-) -> Result<Vec<SearchFileRes>, io::Error> {
-    let callback_ext = [EXT_HTML.to_string(), EXT_XRTM.to_string()].to_vec();
-
-    let res = search_document_file(
-        file_path,
-        search,
-        is_re_mode,
-        context_size,
-        wrapper_prefix,
-        wrapper_postfix,
-        &callback_ext,
-        &callback_search_file,
-    );
-    res
-}
-
-#[test]
-fn test_search_document_file() {
-    let file_path = PathBuf::from("/home/xxx/Documents/fivim/user_files/测试样式.xrtm");
-    let search = "标题";
-    let is_re_mode = false;
-    let context_size = 7;
-    let wrapper_prefix = "<b>";
-    let wrapper_postfix = "</b>";
-
-    let results = match search_document_file_wrapper(
-        &file_path,
-        search,
-        is_re_mode,
-        context_size,
-        wrapper_prefix,
-        wrapper_postfix,
-    ) {
-        Ok(sss) => sss,
-        Err(e) => return println!("test_search_document error: {}", e),
-    };
-
-    println!(">>> results of none-RE mode :::");
-
-    for result in results {
-        println!("path: {}", result.path);
-
-        for text in result.matches {
-            println!("\t {}", text);
-        }
-    }
 }

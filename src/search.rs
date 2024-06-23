@@ -319,7 +319,7 @@ pub fn search_in_dir(
     context_size: usize,
     wrapper_prefix: &str,
     wrapper_postfix: &str,
-    callback_exts: &Vec<String>,
+    html_like_exts: &Vec<String>,
 ) -> Result<Vec<SearchFileRes>, io::Error> {
     let mut results: Vec<SearchFileRes> = Vec::new();
     let plain = if is_re_mode { "" } else { search };
@@ -351,7 +351,7 @@ pub fn search_in_dir(
                 context_size,
                 &wrapper_prefix,
                 &wrapper_postfix,
-                &callback_exts,
+                &html_like_exts,
             ) {
                 Ok(sss) => sss,
                 Err(e) => {
@@ -375,7 +375,7 @@ pub fn search_in_dir(
                 context_size,
                 wrapper_prefix,
                 wrapper_postfix,
-                &callback_exts,
+                &html_like_exts,
             ) {
                 Ok(sss) => sss,
                 Err(e) => {
@@ -401,7 +401,7 @@ fn test_search_document_dir_re() {
     let context_size = 50;
     let wrapper_prefix = "<b>";
     let wrapper_postfix = "</b>";
-    let callback_exts = [].to_vec();
+    let html_like_exts = [].to_vec();
 
     let results = match search_in_dir(
         &dir_path,
@@ -410,7 +410,7 @@ fn test_search_document_dir_re() {
         context_size,
         wrapper_prefix,
         wrapper_postfix,
-        &callback_exts,
+        &html_like_exts,
     ) {
         Ok(sss) => sss,
         Err(e) => return println!("test_search_document_re error: {}", e),

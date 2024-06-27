@@ -1,7 +1,7 @@
 [package]
 name = "fivim-rs-utils"
 description = "Rust utils for fivim."
-version = "1.2.1"
+version = "1.2.2"
 authors = ["newproplus <https://github.com/newproplus>"]
 homepage = "https://github.com/fivim/fivim-rs-utils"
 repository = "https://github.com/fivim/fivim-rs-utils"
@@ -31,7 +31,9 @@ walkdir = "^2.4"
 filetime = "^0.2"
 regex = "1.10"
 toml = "0.8"
-openssl = { version = "^0.10", features = [
-    "vendored",
-] } # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
 html-escape = "0.2.13"
+# only for git2
+# openssl = { version = "^0.10", features = [
+#     "vendored",
+# ] } # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
+
